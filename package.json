@@ -7,9 +7,12 @@
     "scripts": {
         "start": "electron .",
         "dev": "electron .",
-        "build:icon": "node scripts/build-icon.js",
+        "build:icon": "icon-gen -i HexoGUI.png -o build --ico --icns --report",
         "build:win": "npm run build:icon && electron-builder --win nsis",
-        "build:portable": "npm run build:icon && electron-builder --win portable"
+        "build:portable": "npm run build:icon && electron-builder --win portable",
+        "build:linux": "npm run build:icon && electron-builder --linux AppImage",
+        "build:mac": "npm run build:icon && electron-builder --mac dmg",
+        "build:all": "npm run build:icon && electron-builder --win --linux --mac"
     },
     "dependencies": {
         "gray-matter": "^4.0.3"
@@ -17,6 +20,7 @@
     "devDependencies": {
         "electron": "^37.2.3",
         "electron-builder": "^24.13.3",
+        "icon-gen": "^3.0.1",
         "png-to-ico": "^2.1.8",
         "sharp": "^0.33.5"
     },
@@ -41,14 +45,28 @@
                 "portable"
             ],
             "artifactName": "${productName}-${version}-${arch}.${ext}",
-            "icon": "build/icon.ico"
+            "icon": "build/app.ico"
+        },
+        "linux": {
+            "target": [
+                "AppImage"
+            ],
+            "artifactName": "${productName}-${version}-${arch}.${ext}",
+            "icon": "HexoGUI.png"
+        },
+        "mac": {
+            "target": [
+                "dmg"
+            ],
+            "artifactName": "${productName}-${version}-${arch}.${ext}",
+            "icon": "build/app.icns"
         },
         "nsis": {
             "oneClick": false,
             "perMachine": false,
             "allowToChangeInstallationDirectory": true,
-            "installerIcon": "build/icon.ico",
-            "uninstallerIcon": "build/icon.ico"
+            "installerIcon": "build/app.ico",
+            "uninstallerIcon": "build/app.ico"
         }
     }
 }

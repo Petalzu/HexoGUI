@@ -18,9 +18,11 @@ node_modules/
 # Electron / build output
 dist/
 out/
-build/
 release/
 *.asar
+build/app.ico
+build/app.icns
+build/*.png
 
 # OS files
 .DS_Store
