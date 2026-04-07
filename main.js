@@ -4,6 +4,7 @@ const {
   ipcMain,
   shell,
   dialog,
+  Menu,
   nativeTheme,
 } = require("electron");
 const path = require("path");
@@ -214,6 +215,44 @@ let runtimeConfig = defaultConfig();
 
 let mainWindow = null;
 let hexoProcess = null;
+
+function createApplicationMenu() {
+  const isMac = process.platform === "darwin";
+  const template = [
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: "about" },
+              { type: "separator" },
+              { role: "quit" },
+            ],
+          },
+        ]
+      : []),
+    { role: "fileMenu" },
+    { role: "editMenu" },
+    { role: "viewMenu" },
+    { role: "windowMenu" },
+    {
+      label: "Help",
+      role: "help",
+      submenu: [
+        { label: "Author: Petalzu", enabled: false },
+        {
+          label: "GitHub: https://github.com/Petalzu",
+          click: async () => {
+            await shell.openExternal("https://github.com/Petalzu");
+          },
+        },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -958,6 +997,7 @@ ipcMain.handle("server:open-preview", async () => {
 
 app.whenReady().then(() => {
   runtimeConfig = readConfigFromDisk();
+  createApplicationMenu();
   nativeTheme.on("updated", () => {
     emitSystemThemeChanged();
   });
