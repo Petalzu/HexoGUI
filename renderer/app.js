@@ -1,5 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const DEBUG_SERVER_URL = "http://localhost:4000";
 const THEME_MODE_ORDER = ["dark", "light", "system"];
 const THEME_MODE_SYMBOL = {
   dark: "🌙",
@@ -680,12 +681,33 @@ async function refreshServerStatus() {
     : t("debug.stopped");
 }
 
+async function waitForDebugServerReady(maxAttempts = 20, intervalMs = 300) {
+  for (let i = 0; i < maxAttempts; i += 1) {
+    try {
+      const response = await fetch(DEBUG_SERVER_URL, {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (response.ok || response.type === "opaque") {
+        return true;
+      }
+    } catch (_err) {
+      // Server may still be booting.
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+  return false;
+}
+
 async function startDebugServer() {
   const res = await window.hexoAdmin.startServer();
   appendLog(
     res.alreadyRunning ? t("debug.logAlreadyRunning") : t("debug.logStart"),
   );
-  $("#debug-preview").src = "http://localhost:4000";
+  const ready = await waitForDebugServerReady();
+  if (ready) {
+    $("#debug-preview").src = DEBUG_SERVER_URL;
+  }
   await refreshServerStatus();
 }
 
@@ -956,7 +978,7 @@ async function setup() {
       await window.hexoAdmin.openPreview();
     };
     $("#debug-refresh").onclick = () => {
-      $("#debug-preview").src = "http://localhost:4000";
+      $("#debug-preview").src = DEBUG_SERVER_URL;
     };
 
     window.hexoAdmin.onServerOutput((text) => appendLog(text));

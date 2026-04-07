@@ -10,7 +10,7 @@ const {
 const path = require("path");
 const fs = require("fs");
 const fsp = fs.promises;
-const { spawn } = require("child_process");
+const { spawn, execFile } = require("child_process");
 const matter = require("gray-matter");
 
 const APP_NAME = "Hexo 本地管理台";
@@ -215,6 +215,77 @@ let runtimeConfig = defaultConfig();
 
 let mainWindow = null;
 let hexoProcess = null;
+
+function killProcessTree(pid) {
+  return new Promise((resolve) => {
+    if (!pid) {
+      resolve();
+      return;
+    }
+
+    if (process.platform === "win32") {
+      const killer = spawn("taskkill", ["/pid", String(pid), "/t", "/f"], {
+        windowsHide: true,
+      });
+      killer.on("close", () => resolve());
+      killer.on("error", () => resolve());
+      return;
+    }
+
+    try {
+      process.kill(-pid, "SIGTERM");
+    } catch (_err) {
+      try {
+        process.kill(pid, "SIGTERM");
+      } catch (_err2) {
+        // ignore
+      }
+    }
+    resolve();
+  });
+}
+
+function getListeningPidsOnPort(port) {
+  return new Promise((resolve) => {
+    if (process.platform === "win32") {
+      const psCmd = `Get-NetTCPConnection -LocalPort ${Number(port)} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique`;
+      execFile(
+        "powershell.exe",
+        ["-NoProfile", "-Command", psCmd],
+        { windowsHide: true },
+        (_err, stdout) => {
+          const pids = String(stdout || "")
+            .split(/\r?\n/)
+            .map((line) => Number(line.trim()))
+            .filter((num) => Number.isInteger(num) && num > 0);
+          resolve([...new Set(pids)]);
+        },
+      );
+      return;
+    }
+
+    execFile(
+      "sh",
+      ["-lc", `lsof -ti tcp:${Number(port)} -sTCP:LISTEN || true`],
+      {},
+      (_err, stdout) => {
+        const pids = String(stdout || "")
+          .split(/\r?\n/)
+          .map((line) => Number(line.trim()))
+          .filter((num) => Number.isInteger(num) && num > 0);
+        resolve([...new Set(pids)]);
+      },
+    );
+  });
+}
+
+async function killPortListeners(port) {
+  const pids = await getListeningPidsOnPort(port);
+  for (const pid of pids) {
+    if (pid === process.pid) continue;
+    await killProcessTree(pid);
+  }
+}
 
 function createApplicationMenu() {
   const isMac = process.platform === "darwin";
@@ -961,10 +1032,22 @@ ipcMain.handle("server:start", async () => {
     return { ok: true, alreadyRunning: true };
   }
 
-  hexoProcess = spawn("npm", ["run", "server", "--", "-p", "4000"], {
-    cwd: cfg.siteRoot,
-    shell: true,
-  });
+  if (process.platform === "win32") {
+    hexoProcess = spawn(
+      "cmd.exe",
+      ["/d", "/s", "/c", "npm run server -- -p 4000"],
+      {
+        cwd: cfg.siteRoot,
+        windowsHide: true,
+      },
+    );
+  } else {
+    hexoProcess = spawn("npm", ["run", "server", "--", "-p", "4000"], {
+      cwd: cfg.siteRoot,
+      shell: false,
+      detached: true,
+    });
+  }
 
   hexoProcess.stdout.on("data", (chunk) => emitServerOutput(String(chunk)));
   hexoProcess.stderr.on("data", (chunk) => emitServerOutput(String(chunk)));
@@ -977,13 +1060,15 @@ ipcMain.handle("server:start", async () => {
 });
 
 ipcMain.handle("server:stop", async () => {
-  if (!hexoProcess || hexoProcess.killed) {
-    hexoProcess = null;
-    return { ok: true, alreadyStopped: true };
+  const hadProcess = Boolean(hexoProcess && !hexoProcess.killed);
+
+  if (hadProcess) {
+    await killProcessTree(hexoProcess.pid);
   }
-  hexoProcess.kill();
+
+  await killPortListeners(4000);
   hexoProcess = null;
-  return { ok: true, alreadyStopped: false };
+  return { ok: true, alreadyStopped: !hadProcess };
 });
 
 ipcMain.handle("server:status", async () => {
@@ -1006,8 +1091,9 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   if (hexoProcess && !hexoProcess.killed) {
-    hexoProcess.kill();
+    killProcessTree(hexoProcess.pid).catch(() => {});
   }
+  killPortListeners(4000).catch(() => {});
   if (process.platform !== "darwin") {
     app.quit();
   }
