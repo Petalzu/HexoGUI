@@ -8,11 +8,11 @@
         "start": "electron .",
         "dev": "electron .",
         "build:icon": "icon-gen -i HexoGUI.png -o build --ico --icns --report",
-        "build:win": "npm run build:icon && electron-builder --win nsis",
-        "build:portable": "npm run build:icon && electron-builder --win portable",
-        "build:linux": "npm run build:icon && electron-builder --linux AppImage",
-        "build:mac": "npm run build:icon && electron-builder --mac dmg",
-        "build:all": "npm run build:icon && electron-builder --win --linux --mac"
+        "build:win": "npm run build:icon && electron-builder --win nsis --publish never",
+        "build:portable": "npm run build:icon && electron-builder --win portable --publish never",
+        "build:linux": "npm run build:icon && electron-builder --linux AppImage --publish never",
+        "build:mac": "npm run build:icon && electron-builder --mac dmg --publish never",
+        "build:all": "npm run build:icon && electron-builder --win --linux --mac --publish never"
     },
     "dependencies": {
         "gray-matter": "^4.0.3"

@@ -12,6 +12,7 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   CSC_IDENTITY_AUTO_DISCOVERY: false
+  ELECTRON_BUILDER_DISABLE_PUBLISH: true
 
 jobs:
   build:
