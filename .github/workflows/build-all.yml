@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CSC_IDENTITY_AUTO_DISCOVERY: false
+
 jobs:
   build:
     strategy:
@@ -26,13 +30,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+
+      - name: Install Linux build dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libarchive-tools rpm
 
       - name: Install dependencies
         run: npm ci
@@ -41,11 +51,13 @@ jobs:
         run: npm run ${{ matrix.script }}
 
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-artifacts
           path: |
             dist/**
+            npm-debug.log*
 
   release:
     name: Publish GitHub Release
