@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hexo Local Admin</title>
+    <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <h1 class="logo">Hexo Control</h1>
+            <p class="subtitle">Electron 本地管理端</p>
+
+            <button class="nav-btn active" data-tab="settings">路径设置</button>
+            <button class="nav-btn" data-tab="posts">文章管理</button>
+            <button class="nav-btn" data-tab="pages">页面管理</button>
+            <button class="nav-btn" data-tab="images">图片管理</button>
+            <button class="nav-btn" data-tab="debug">本地调试</button>
+
+            <div class="sidebar-footer">
+                <div class="site-path" id="site-path"></div>
+                <div class="quick-switches">
+                    <button type="button" class="switch-btn compact" id="lang-toggle-btn">English</button>
+                    <button type="button" class="switch-btn compact" id="theme-toggle-btn">🌙 Dark</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <section class="panel" id="panel-settings">
+                <div class="panel-header">
+                    <h2>路径配置</h2>
+                    <div class="actions">
+                        <button id="cfg-detect" type="button">识别同级站点</button>
+                        <select id="cfg-sibling-sites"></select>
+                        <button id="cfg-apply-sibling" type="button">套用站点</button>
+                        <button id="cfg-save" class="primary">保存路径配置</button>
+                    </div>
+                </div>
+
+                <div class="settings-box">
+                    <label>Hexo 站点根目录
+                        <div class="input-row">
+                            <input id="cfg-site-root" placeholder="例如 D:/sites/my-hexo" />
+                            <button id="cfg-pick-site-root">选择目录</button>
+                        </div>
+                    </label>
+
+                    <label>文章目录（可相对站点根目录，也可绝对路径）
+                        <div class="input-row">
+                            <input id="cfg-posts-dir" placeholder="例如 source/_posts" />
+                            <button id="cfg-pick-posts-dir">选择目录</button>
+                        </div>
+                    </label>
+
+                    <label>页面目录（可相对站点根目录，也可绝对路径）
+                        <div class="input-row">
+                            <input id="cfg-pages-dir" placeholder="例如 source" />
+                            <button id="cfg-pick-pages-dir">选择目录</button>
+                        </div>
+                    </label>
+
+                    <label>图片目录（每行一个，可相对站点根目录，也可绝对路径）
+                        <textarea id="cfg-image-roots" class="path-textarea" spellcheck="false"></textarea>
+                    </label>
+                </div>
+            </section>
+
+            <section class="panel" id="panel-posts">
+                <div class="panel-header">
+                    <h2>文章增删改</h2>
+                    <div class="actions">
+                        <button id="post-refresh">刷新列表</button>
+                        <button id="post-new" class="primary">新建文章</button>
+                    </div>
+                </div>
+
+                <div class="post-layout">
+                    <div class="post-list-box">
+                        <input id="post-search" placeholder="搜索标题或文件名" />
+                        <ul id="post-list"></ul>
+                    </div>
+
+                    <div class="editor-box">
+                        <input type="hidden" id="post-original-filename" />
+                        <div class="form-grid">
+                            <label>文件名(.md)
+                                <input id="post-filename" placeholder="例如 my-post.md" />
+                            </label>
+                            <label>标题
+                                <input id="post-title" placeholder="文章标题" />
+                            </label>
+                            <label>日期
+                                <input id="post-date" placeholder="YYYY-MM-DD HH:mm:ss" />
+                            </label>
+                            <label>更新时间
+                                <input id="post-updated" placeholder="YYYY-MM-DD HH:mm:ss" />
+                            </label>
+                            <label>分类（逗号分隔）
+                                <input id="post-categories" placeholder="笔记,技术" />
+                            </label>
+                            <label>标签（逗号分隔）
+                                <input id="post-tags" placeholder="Hexo,Electron" />
+                            </label>
+                            <label>thumbnail
+                                <input id="post-thumbnail" placeholder="/images/..." />
+                            </label>
+                            <label>cover
+                                <input id="post-cover" placeholder="/images/..." />
+                            </label>
+                        </div>
+
+                        <label class="toc-line">
+                            <input type="checkbox" id="post-toc" /> 启用目录 toc
+                        </label>
+
+                        <label class="content-label">正文 Markdown</label>
+                        <textarea id="post-content" spellcheck="false"></textarea>
+
+                        <div class="actions bottom-actions">
+                            <button id="post-save" class="primary">保存</button>
+                            <button id="post-delete" class="danger">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" id="panel-pages">
+                <div class="panel-header">
+                    <h2>页面增删改</h2>
+                    <div class="actions">
+                        <button id="page-refresh">刷新列表</button>
+                        <button id="page-new" class="primary">新建页面</button>
+                    </div>
+                </div>
+
+                <div class="post-layout">
+                    <div class="post-list-box">
+                        <input id="page-search" placeholder="搜索标题或页面文件路径" />
+                        <ul id="page-list"></ul>
+                    </div>
+
+                    <div class="editor-box">
+                        <input type="hidden" id="page-original-relative-path" />
+                        <div class="form-grid">
+                            <label>页面文件路径(.md)
+                                <input id="page-relative-path" placeholder="例如 about/index.md" />
+                            </label>
+                            <label>标题
+                                <input id="page-title" placeholder="页面标题" />
+                            </label>
+                            <label>日期
+                                <input id="page-date" placeholder="YYYY-MM-DD HH:mm:ss" />
+                            </label>
+                            <label>更新时间
+                                <input id="page-updated" placeholder="YYYY-MM-DD HH:mm:ss" />
+                            </label>
+                            <label>分类（逗号分隔）
+                                <input id="page-categories" placeholder="页面,介绍" />
+                            </label>
+                            <label>标签（逗号分隔）
+                                <input id="page-tags" placeholder="Hexo,Page" />
+                            </label>
+                            <label>thumbnail
+                                <input id="page-thumbnail" placeholder="/images/..." />
+                            </label>
+                            <label>cover
+                                <input id="page-cover" placeholder="/images/..." />
+                            </label>
+                        </div>
+
+                        <label class="toc-line">
+                            <input type="checkbox" id="page-toc" /> 启用目录 toc
+                        </label>
+
+                        <label class="content-label">正文 Markdown</label>
+                        <textarea id="page-content" spellcheck="false"></textarea>
+
+                        <div class="actions bottom-actions">
+                            <button id="page-save" class="primary">保存</button>
+                            <button id="page-delete" class="danger">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" id="panel-images">
+                <div class="panel-header">
+                    <h2>图片增删改</h2>
+                    <div class="actions">
+                        <select id="img-root-select">
+                        </select>
+                        <button id="img-refresh">刷新图片</button>
+                    </div>
+                </div>
+
+                <div class="image-layout">
+                    <div class="image-list-box">
+                        <ul id="img-list"></ul>
+                    </div>
+                    <div class="image-editor-box">
+                        <div class="preview-wrap">
+                            <img id="img-preview" alt="预览" />
+                        </div>
+                        <div class="image-meta" id="img-meta">请选择图片</div>
+
+                        <div class="form-grid image-form-grid">
+                            <label>上传到子目录（可留空）
+                                <input id="img-upload-subfolder" placeholder="例如 hpc/hpcgame2026" />
+                            </label>
+                            <label>上传文件名（可留空，默认本地文件名）
+                                <input id="img-upload-name" placeholder="例如 cover.webp" />
+                            </label>
+                        </div>
+
+                        <div class="actions bottom-actions">
+                            <button id="img-upload" class="primary">新增图片</button>
+                            <button id="img-replace">替换当前图片</button>
+                            <button id="img-copy">复制 Markdown 路径</button>
+                            <button id="img-delete" class="danger">删除当前图片</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" id="panel-debug">
+                <div class="panel-header">
+                    <h2>本地调试与预览</h2>
+                    <div class="actions">
+                        <button id="debug-start" class="primary">一键启动调试</button>
+                        <button id="debug-stop" class="danger">停止调试</button>
+                        <button id="debug-open">浏览器打开</button>
+                        <button id="debug-refresh">刷新预览</button>
+                    </div>
+                </div>
+
+                <div class="status-line">
+                    <span id="server-status-dot" class="dot"></span>
+                    <span id="server-status-text">服务未启动</span>
+                </div>
+
+                <div class="debug-layout">
+                    <textarea id="debug-log" readonly spellcheck="false"></textarea>
+                    <iframe id="debug-preview" src="about:blank"></iframe>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast"></div>
+    <script src="./app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,54 @@
+{
+    "name": "hexo-local-admin-gui",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Electron GUI for managing Hexo posts/pages/images with configurable paths",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "dev": "electron .",
+        "build:icon": "node scripts/build-icon.js",
+        "build:win": "npm run build:icon && electron-builder --win nsis",
+        "build:portable": "npm run build:icon && electron-builder --win portable"
+    },
+    "dependencies": {
+        "gray-matter": "^4.0.3"
+    },
+    "devDependencies": {
+        "electron": "^37.2.3",
+        "electron-builder": "^24.13.3",
+        "png-to-ico": "^2.1.8",
+        "sharp": "^0.33.5"
+    },
+    "build": {
+        "appId": "com.localpublisher.hexogui",
+        "productName": "HexoGUI",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "main.js",
+            "preload.js",
+            "renderer/**/*",
+            "locales/**/*",
+            "package.json",
+            "README.md",
+            "LICENSE"
+        ],
+        "win": {
+            "target": [
+                "nsis",
+                "portable"
+            ],
+            "artifactName": "${productName}-${version}-${arch}.${ext}",
+            "icon": "build/icon.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "perMachine": false,
+            "allowToChangeInstallationDirectory": true,
+            "installerIcon": "build/icon.ico",
+            "uninstallerIcon": "build/icon.ico"
+        }
+    }
+}
